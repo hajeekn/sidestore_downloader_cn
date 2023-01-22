@@ -22,7 +22,7 @@ fn main() {
 
 fn _main() {
     println!(
-        r#"Welcome to the SideStore downloader.
+        r#"欢迎使用 SideStore 下载器
         You will be guided through the steps of downloading the SideStore .ipa and modifying it for your device.
         Make sure your device is plugged in or connected via network so we can pull the information required from it.
         "#
