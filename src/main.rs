@@ -23,22 +23,22 @@ fn main() {
 fn _main() {
     println!(
         r#"欢迎使用 SideStore 下载器
-        You will be guided through the steps of downloading the SideStore .ipa and modifying it for your device.
-        Make sure your device is plugged in or connected via network so we can pull the information required from it.
+        你将会被此程序引导完成下载 SideStore.ipa 并为你的设备修改的步骤
+        请确保你的设备使用 USB 或者网络连接,以便我们从中提取所需信息
         "#
     );
     #[cfg(target_os = "macos")]
-    println!("Make sure to open Finder and ensure that your device is shown on the side bar");
+    println!("确保打开 Finder 并且设备显示在侧栏上");
     #[cfg(target_os = "windows")]
-    println!("Make sure that iTunes is downloaded and that you've clicked your device at the top. Make sure to allow a connection.");
+    println!("确保已经安装 itunes 并且允许连接");
     #[cfg(target_os = "linux")]
-    println!("Make sure that usbmuxd is installed and running. Ubuntu can install it from apt.");
+    println!("确保 usbmuxd 已安装并正在运行，Ubuntu 可以从 apt 安装它");
 
-    println!("Step 1/7: Download the SideStore .ipa");
+    println!("步骤 1/7: 下载 SideStore .ipa");
     let selection = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("We will download SideStore from the latest stable release. Would you like to specify a different URL?")
+        .with_prompt("我们将会下载最新的稳定版 ipa 你是否要指定其他 URL？")
         .default(0)
-        .items(&[ "No (recommended)", "Yes", "Choose a local file"])
+        .items(&[ "不 (推荐)", "是", "选择本地 ipa"])
         .interact()
         .unwrap();
 
@@ -47,11 +47,11 @@ fn _main() {
             "https://github.com/SideStore/SideStore/releases/latest/download/SideStore.ipa"
                 .to_string()
         } else {
-            println!("Enter the URL (ending in .ipa) for SideStore");
+            println!("请输入 SideStore 的文件地址(以 .ipa 结尾)");
             let mut s = String::new();
             stdin()
                 .read_line(&mut s)
-                .expect("Did not enter a correct string");
+                .expect("未输入正确的字符串");
 
             s.trim().to_string()
         };
@@ -63,34 +63,34 @@ fn _main() {
         let ipa_bytes = match agent.get(&url).call() {
             Ok(i) => i,
             Err(e) => {
-                println!("Could not download from specified URL: {:?}", e);
+                println!("无法从指定的URL下载： {:?}", e);
                 return;
             }
         };
         let mut x_vec = Vec::new();
         if ipa_bytes.into_reader().read_to_end(&mut x_vec).is_err() {
-            println!("Error getting bytes from URL");
+            println!("从 URL 获取文件字节时出错");
             return;
         }
         x_vec
     } else {
-        println!("Enter the path to the SideStore .ipa");
+        println!("输入 SideStore .ipa 的路径");
         let mut s = String::new();
         stdin()
             .read_line(&mut s)
-            .expect("Did not enter a correct string");
+            .expect("未输入正确的字符串");
 
         let path = Path::new(s.trim());
         let mut file = match File::open(path) {
             Ok(f) => f,
             Err(e) => {
-                println!("Could not open file: {:?}", e);
+                println!("无法打开文件: {:?}", e);
                 return;
             }
         };
         let mut x_vec = Vec::new();
         if file.read_to_end(&mut x_vec).is_err() {
-            println!("Error getting bytes from file");
+            println!("无法从文件取得字节");
             return;
         }
         x_vec
@@ -99,17 +99,17 @@ fn _main() {
     let mut archive = match zip::read::ZipArchive::new(cursor) {
         Ok(a) => a,
         Err(e) => {
-            println!("Unable to convert download into archive: {:?}", e);
+            println!("无法将下载内容转换为存档： {:?}", e);
             return;
         }
     };
 
-    println!("\n\nStep 2/7: Choose a directory to save the .ipa");
-    println!("Enter the path now (use . for the current directory)");
+    println!("\n\n步骤 2/7: 选择目录保存 .ipa");
+    println!("现在输入路径(使用 . 选择程序运行目录)");
     let mut s = String::new();
     stdin()
         .read_line(&mut s)
-        .expect("Did not enter a correct string");
+        .expect("未输入正确的字符串");
     if s.trim() == "." {
         // nightmare nightmare nightmare nightmare nightmare nightmare nightmare nightmare nightmare
         s = std::env::current_dir()
@@ -123,7 +123,7 @@ fn _main() {
     let save_path = match PathBuf::from_str(s.trim()) {
         Ok(t) => t,
         Err(e) => {
-            println!("Bad path string: {:?}", e);
+            println!("路径字符串错误: {:?}", e);
             return;
         }
     };
@@ -131,29 +131,29 @@ fn _main() {
         match std::fs::create_dir_all(&save_path) {
             Ok(_) => (),
             Err(e) => {
-                println!("Path not found, creation failed: {:?}", e);
+                println!("找不到路径，创建失败： {:?}", e);
                 return;
             }
         }
     }
 
-    println!("\n\nStep 3/7: Choose the device you're creating the .ipa for");
+    println!("\n\n步骤 3/7: 选择你的设备并为其创建 .ipa 文件");
     let device;
     let device_name;
     loop {
         let devices = match rusty_libimobiledevice::idevice::get_devices() {
             Ok(d) => d,
             Err(e) => {
-                println!("Could not get the device list from the muxer: {:?}", e);
+                println!("无法获取设备列表： {:?}", e);
                 #[cfg(target_os = "windows")]
-                println!("Make sure you have iTunes installed and that it is running");
+                println!("请确保 iTunes 已经安装并且打开");
                 #[cfg(target_os = "linux")]
-                println!("Make sure that usbmuxd is running");
+                println!("请确保 usbmuxd 正在运行");
                 continue;
             }
         };
         if devices.is_empty() {
-            println!("No device connected!!");
+            println!("没有设备连接");
             std::thread::sleep(std::time::Duration::from_secs(1));
             continue;
         }
@@ -163,18 +163,18 @@ fn _main() {
             let lock_cli = match device.new_lockdownd_client("ss_downloader") {
                 Ok(l) => l,
                 Err(e) => {
-                    println!("Unable to start lockdownd client on device: {:?}", e);
+                    println!("无法在设备上启动 lockdownd 客户端： {:?}", e);
                     return;
                 }
             };
             let name = match lock_cli.get_device_name() {
                 Ok(n) => n,
                 Err(e) => {
-                    println!("Unable to get device name: {:?}", e);
+                    println!("无法获取设备名称: {:?}", e);
                     return;
                 }
             };
-            println!("Using the only connected device: {}", name);
+            println!("使用唯一连接的设备: {}", name);
             device_name = name;
             break;
         }
@@ -204,7 +204,7 @@ fn _main() {
         }
 
         let selection = Select::with_theme(&ColorfulTheme::default())
-            .with_prompt("Choose your device")
+            .with_prompt("选择你的设备")
             .default(0)
             .items(
                 &mp.iter()
@@ -228,27 +228,27 @@ fn _main() {
         .replace('’', "")
         .replace('\'', "");
 
-    println!("\n\nStep 4/7: Check the pairing file");
+    println!("\n\n步骤 4/7: 检查配对文件");
     if device.get_network() {
-        println!("Device is connected over the network, test skipped");
+        println!("设备通过网络连接，跳过测试");
     } else {
-        println!("It is HIGHLY RECOMMENDED to test your device's pairing file.");
-        println!("This will ensure that SideStore will be able to use it.");
+        println!("强烈建议您测试设备的配对文件");
+        println!("这将确保 SideStore 能够使用它");
         let selection = Select::with_theme(&ColorfulTheme::default())
-            .with_prompt("Proceed with pairing file test?")
+            .with_prompt("是否继续进行配对文件测试？")
             .default(0)
-            .items(&["Yes (HIGHLY RECOMMENDED)", "No"])
+            .items(&["是 (墙裂推荐)", "不"])
             .interact()
             .unwrap();
         match selection {
             0 => {
-                println!("Enter the local IP address of your device");
+                println!("输入设备的本地 IP 地址");
                 let mut s = String::new();
-                stdin().read_line(&mut s).expect("bad uh oh abort");
+                stdin().read_line(&mut s).expect("终止");
                 let ip = match std::net::IpAddr::from_str(s.trim()) {
                     Ok(i) => i,
                     Err(e) => {
-                        println!("Could not parse input: {:?}", e);
+                        println!("无法解析输入： {:?}", e);
                         return;
                     }
                 };
@@ -265,29 +265,29 @@ fn _main() {
                         "com.apple.mobile.wireless_lockdown".to_string(),
                         true.into(),
                     ) {
-                        println!("Failed to enable WiFi sync: {:?}", e);
-                        println!("Make sure you have a password set.");
+                        println!("无法启动 WiFi 同步: {:?}", e);
+                        println!("请确保您已设置密码");
                         return;
                     }
                     if test_device(ip, device.get_udid()) {
                         break;
                     }
                     if let Err(e) = lock_cli.pair(None, None) {
-                        println!("Failed to pair to your device. {:?}", e);
+                        println!("无法与您的设备配对 {:?}", e);
                         return;
                     }
                 }
             }
             1 => {
-                println!("Skipping test, there is no guarantee SideStore will work.")
+                println!("跳过测试，无法保证 SideStore 将正常工作")
             }
             _ => unreachable!(),
         }
     }
 
-    println!("\n\nStep 5/6: Extract and modify the .ipa");
+    println!("\n\n步骤 5/6: 提取并修改 .ipa");
     if archive.extract(&save_path.join("temp")).is_err() {
-        println!("Unable to extract the archive");
+        println!("无法解压缩归档文件");
         return;
     }
 
@@ -297,7 +297,7 @@ fn _main() {
         .join("SideStore.app")
         .join("Info.plist");
     if !plist_path.exists() {
-        println!("Archive did not contain Info.plist");
+        println!("存档不包含 Info.plist");
         return;
     }
 
@@ -307,13 +307,13 @@ fn _main() {
     let mut info_plist = match plist_plus::Plist::from_bin(buf[..].to_vec()) {
         Ok(i) => i,
         Err(e) => {
-            println!("Failed to read plist from file: {:?}", e);
+            println!("无法从文件读取plist: {:?}", e);
             return;
         }
     };
 
     if info_plist.plist_type != PlistType::Dictionary {
-        println!("Info.plist was in the incorrect format");
+        println!("Info.plist 格式不正确");
         return;
     }
 
@@ -327,7 +327,7 @@ fn _main() {
             p.to_string()
         }
         Err(e) => {
-            println!("Failed to read pairing file for device from muxer: {:?}", e);
+            println!("无法读取设备的配对文件： {:?}", e);
             return;
         }
     };
@@ -341,7 +341,7 @@ fn _main() {
     let mut f = std::fs::File::create(plist_path).unwrap();
     let _ = f.write(info_plist.as_bytes()).unwrap();
 
-    println!("\n\nStep 6/6: Compress ipa");
+    println!("\n\n步骤 6/6: 压缩 ipa");
     pls_zip(
         save_path.join("temp").to_str().unwrap(),
         save_path
@@ -353,7 +353,7 @@ fn _main() {
     .unwrap();
     std::fs::remove_dir_all(save_path.join("temp")).unwrap();
 
-    println!("\n\nDone!! Do not share this .ipa with others, it contains private information for your device.");
+    println!("\n\n大功告成!不要与他人共享此 ipa，它包含您设备的私人信息");
 }
 
 fn test_device(ip: std::net::IpAddr, udid: String) -> bool {
@@ -361,7 +361,7 @@ fn test_device(ip: std::net::IpAddr, udid: String) -> bool {
     match device.new_heartbeat_client("ss_downloader_tester") {
         Ok(_) => true,
         Err(e) => {
-            println!("Test failed!! {:?}", e);
+            println!("测试失败! {:?}", e);
             false
         }
     }
